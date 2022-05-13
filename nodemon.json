@@ -1,0 +1,7 @@
+{
+	"events": {
+		"restart": "fuser -k 3080/tcp > /dev/null",
+		"crash": "fuser -k 3080/tcp > /dev/null",
+		"start": "fuser -k 3080/tcp > /dev/null"
+	}
+}
