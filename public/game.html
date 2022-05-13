@@ -12,11 +12,14 @@
 </head>
 <body>
 	<div id="myBoard" style="width: 800px; margin: auto"></div>
+	<h1 id="starter-message">Waiting on another player...</h1>
+	<h1 id="disconnect-message" style="display: none;">Other player has disconnected. <br>Refresh to try for a new game.</h1> 
 
 	<script src="scripts/jquery-3.4.1.min.js"></script>
 	<script src="scripts/prettify.min.js"></script>
 	<script src="scripts/chessboard-1.0.0.min.js"></script>
 	<script src="scripts/chess.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
 	<script src="scripts/gamePage.js"></script>
 </body>
 </html>
