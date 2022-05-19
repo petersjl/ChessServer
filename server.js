@@ -4,6 +4,7 @@ const http = require('http');
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server);
+const Chess = require("chessboard-engine");
 
 app.use('/', express.static('public'));
 
@@ -58,8 +59,9 @@ io.on('connection', (socket) => {
 			socket.color = 'black';
 		}
 	});
-	socket.on('make-move', (move) => {
-		socket.game.move(socket.color, move);
+	socket.on('make-move', (move, fen) => {
+		console.log(`Move: ${move}, Fen: ${fen}`);
+		socket.game.move(socket.color, move, fen);
 	});
 });
 
@@ -68,6 +70,9 @@ function Game(id){
 	this.playerBlack = null,
 	this.id = id;
 	this.closed = false;
+	this.board = new Chess.Game();
+	this.fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR' // The start state
+	this.turn = 'white';
 
 	this.addPlayer = function (player){
 		if(this.playerBlack) return;
@@ -86,9 +91,35 @@ function Game(id){
 		this.playerBlack.emit("start-game", 'black');
 	}
 
-	this.move = function (color, move){
-		if(color == 'white') this.playerBlack.emit('move-made', move);
-		else this.playerWhite.emit('move-made', move);
+	this.move = function (color, move, fen){
+		// If the wrong player makes a move, then tell them to undo that move;
+		if(this.turn != color){
+			if(color == 'white') this.playerWhite.emit('false-move', 1);
+			else this.playerBlack.emit('false-move', 1);
+			return
+		}
+
+		let split = move.split("-");
+		let check = this.board.move({from: split[0],to: split[1]})
+
+		if(check.success){
+			this.fen = fen;
+			if(color == 'white'){
+				this.playerBlack.emit('move-made', move);
+				this.turn = 'black'
+			} 
+			else {
+				this.playerWhite.emit('move-made', move);
+				this.turn = 'white'
+			}
+		}else{
+			if(color == 'white'){
+				this.playerWhite.emit('false-move', 1);
+			} 
+			else {
+				this.playerBlack.emit('false-move', 1);
+			}
+		}
 	}
 
 	this.close = function () {
